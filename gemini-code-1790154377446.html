@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Keischa - My Princess Worksheet</title>
+
+  <!-- Google Fonts: Fredoka & Quicksand for a friendly princess vibe -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            princess: {
+              pink: '#FFB7B2',
+              'pink-light': '#FFF0F3',
+              lavender: '#E2D4F0',
+              'lavender-light': '#F3EEFA',
+              blue: '#B5EAD7',
+              cream: '#FFF9EC',
+              gold: '#E5C158',
+              'gold-dark': '#C39B2A',
+              text: '#4A3E3D',
+            }
+          },
+          fontFamily: {
+            title: ['Fredoka', 'sans-serif'],
+            body: ['Quicksand', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-cream: #FFF9EC;
+      --card-border: #F3D3DF;
+      --gold-accent: #E5C158;
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background-color: var(--bg-cream);
+      color: #4A3E3D;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F3EEFA;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E2D4F0;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #FFB7B2;
+    }
+
+    /* Princess Sparkle Background Effect */
+    .sparkle-bg {
+      background-image: 
+        radial-gradient(circle, rgba(229,193,88,0.2) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,183,178,0.2) 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    /* Tiara / Crown Header Border */
+    .tiara-border {
+      border-bottom: 3px solid var(--gold-accent);
+      box-shadow: 0 4px 12px rgba(229, 193, 88, 0.15);
+    }
+
+    /* Interactive Card Transitions */
+    .folder-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .folder-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(181, 234, 215, 0.3);
+    }
+    .folder-card:active {
+      transform: translateY(-1px);
+    }
+
+    .worksheet-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .worksheet-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(226, 212, 240, 0.4);
+    }
+  </style>
+</head>
+<body class="sparkle-bg min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+  <!-- MOBILE HEADER TOP BAR -->
+  <header class="md:hidden bg-white/90 backdrop-blur-md px-4 py-3 tiara-border flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center space-x-2">
+      <i class="fa-solid fa-crown text-princess-gold text-xl"></i>
+      <span class="font-title text-xl font-bold text-princess-text">Keischa</span>
+    </div>
+    <div class="flex items-center space-x-3">
+      <!-- Sync Status Badge -->
+      <span id="sync-status-mobile" class="text-xs px-2.5 py-1 rounded-full bg-princess-lavender-light text-purple-700 font-semibold flex items-center gap-1.5">
+        <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+        <span>Telah Disimpan</span>
+      </span>
+      <button id="mobile-menu-btn" class="text-princess-text p-2 rounded-lg hover:bg-princess-pink-light">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR / NAVIGATION (Responsive Desktop Left Drawer / Mobile Drawer) -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white/95 backdrop-blur-md border-r border-princess-pink/30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-xl md:shadow-none md:static">
+    <div>
+      <!-- App Header Branding -->
+      <div class="p-5 flex items-center justify-between border-b border-princess-lavender/50">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-princess-pink-light border-2 border-princess-gold flex items-center justify-center shadow-sm">
+            <i class="fa-solid fa-crown text-princess-gold text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-title text-xl font-bold text-princess-text tracking-wide">Keischa</h1>
+            <p class="text-[10px] text-pink-500 font-semibold uppercase tracking-wider">My Princess Worksheet</p>
+          </div>
+        </div>
+        <button id="close-sidebar-btn" class="md:hidden text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-2">
+        <a href="#" id="nav-home" onclick="switchView('home')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-2xl font-semibold bg-princess-pink-light text-pink-600 transition-colors">
+          <i class="fa-solid fa-house text-lg w-6"></i>
+          <span>Laman Utama</span>
+        </a>
+        <a href="#" id="nav-folders" onclick="switchView('folders')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-2xl font-semibold text-gray-600 hover:bg-princess-lavender-light hover:text-purple-600 transition-colors">
+          <i class="fa-solid fa-folder-closed text-lg w-6"></i>
+          <span>Folder Saya</span>
+        </a>
+        <a href="#" id="nav-recent" onclick="switchView('recent')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-2xl font-semibold text-gray-600 hover:bg-princess-lavender-light hover:text-purple-600 transition-colors">
+          <i class="fa-solid fa-clock-rotate-left text-lg w-6"></i>
+          <span>Terkini</span>
+        </a>
+        <a href="#" id="nav-settings" onclick="switchView('settings')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-2xl font-semibold text-gray-600 hover:bg-princess-lavender-light hover:text-purple-600 transition-colors">
+          <i class="fa-solid fa-gear text-lg w-6"></i>
+          <span>Tetapan</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- User Account Status Card -->
+    <div class="p-4 border-t border-princess-lavender/50 bg-princess-lavender-light/30">
+      <div class="flex items-center space-x-3 p-2 bg-white rounded-xl border border-princess-lavender">
+        <div class="w-9 h-9 rounded-full bg-princess-pink flex items-center justify-center text-white font-bold">
+          <i class="fa-solid fa-user-large text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-bold text-gray-800 truncate" id="user-display-name">Puteri Keischa</p>
+          <p class="text-[10px] text-gray-500 truncate" id="user-display-email font-mono">keischa@princess.app</p>
+        </div>
+        <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg" title="Log Keluar">
+          <i class="fa-solid fa-right-from-bracket text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- OVERLAY FOR MOBILE SIDEBAR -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+    <!-- DESKTOP TOP BAR -->
+    <header class="hidden md:flex bg-white/80 backdrop-blur-md px-8 py-4 border-b border-princess-lavender justify-between items-center sticky top-0 z-20">
+      <!-- Search Input -->
+      <div class="relative w-80">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input 
+          type="text" 
+          id="global-search" 
+          oninput="handleSearch(this.value)"
+          placeholder="Cari lembaran kerja..." 
+          class="w-full pl-10 pr-4 py-2 bg-princess-lavender-light/50 border border-princess-lavender rounded-full text-sm text-princess-text focus:outline-none focus:ring-2 focus:ring-princess-pink focus:bg-white transition-all"
+        />
+      </div>
+
+      <!-- Action Buttons & Status -->
+      <div class="flex items-center space-x-4">
+        <span id="sync-status-desktop" class="text-xs px-3 py-1.5 rounded-full bg-princess-lavender-light text-purple-700 font-semibold flex items-center gap-2 border border-purple-200">
+          <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+          <span>Telah Disimpan</span>
+        </span>
+
+        <button onclick="triggerImportPDF()" class="bg-gradient-to-r from-pink-400 to-princess-pink text-white font-title px-5 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center space-x-2 font-semibold active:scale-95">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          <span>Import PDF</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEWS CONTAINER -->
+    <div class="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto w-full">
+
+      <!-- VIEW 1: HOME PAGE -->
+      <section id="view-home" class="view-content space-y-8">
+        
+        <!-- Welcome Banner -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-princess-pink-light via-princess-lavender-light to-princess-blue p-6 sm:p-8 border-2 border-white shadow-lg">
+          <div class="relative z-10 space-y-2 max-w-xl">
+            <span class="px-3 py-1 bg-white/80 text-pink-600 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm">Selamat Datang ✨</span>
+            <h2 class="font-title text-2xl sm:text-3xl font-bold text-princess-text">Mari Belajar Hari Ini, Puteri! 👑</h2>
+            <p class="text-sm text-gray-600 leading-relaxed">Pilih folder subjek di bawah atau sambung terus lembaran kerja yang telah anda mulakan.</p>
+          </div>
+          <!-- Decorative Background Elements -->
+          <i class="fa-solid fa-wand-magic-sparkles absolute right-4 bottom-2 text-7xl text-pink-300/30 -rotate-12 pointer-events-none"></i>
+        </div>
+
+        <!-- Continue Learning Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
+              <i class="fa-solid fa-book-open-reader text-pink-400"></i>
+              <span>Sambung Belajar</span>
+            </h3>
+            <button onclick="switchView('recent')" class="text-xs font-bold text-pink-500 hover:underline">Lihat Semua</button>
+          </div>
+
+          <div id="continue-learning-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Subject Folders Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
+              <i class="fa-solid fa-folder-open text-purple-400"></i>
+              <span>Folder Saya</span>
+            </h3>
+            <button onclick="openAddFolderModal()" class="text-xs bg-white border border-princess-lavender font-bold text-purple-600 px-3 py-1.5 rounded-full hover:bg-princess-lavender-light flex items-center gap-1.5 transition-colors shadow-sm">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Folder</span>
+            </button>
+          </div>
+
+          <!-- Subject Folders Grid -->
+          <div id="folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Dynamically Rendered by JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- VIEW 2: FOLDERS PAGE -->
+      <section id="view-folders" class="view-content space-y-6 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-title text-2xl font-bold text-princess-text">Semua Folder Subjek</h2>
+            <p class="text-xs text-gray-500">Urus folder dan susun lembaran kerja anda.</p>
+          </div>
+          <button onclick="openAddFolderModal()" class="bg-princess-lavender font-title text-purple-800 px-4 py-2 rounded-2xl font-bold hover:bg-purple-200 transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Tambah Folder Baru</span>
+          </button>
+        </div>
+
+        <div id="full-folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Dynamically Populated -->
+        </div>
+      </section>
+
+      <!-- VIEW 3: SINGLE FOLDER DETAIL VIEW -->
+      <section id="view-folder-detail" class="view-content space-y-6 hidden">
+        <!-- Back and Folder Header -->
+        <div class="flex items-center justify-between border-b border-princess-lavender pb-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="switchView('home')" class="p-2 rounded-full hover:bg-princess-pink-light text-gray-600">
+              <i class="fa-solid fa-arrow-left text-lg"></i>
+            </button>
+            <div>
+              <h2 id="current-folder-title" class="font-title text-2xl font-bold text-princess-text">Nama Folder</h2>
+              <p id="current-folder-subtitle" class="text-xs text-gray-500">0 Lembaran Kerja</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="triggerImportPDF()" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400 transition-colors">
+              <i class="fa-solid fa-plus mr-1"></i> Tambah PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Worksheets Grid in Folder -->
+        <div id="folder-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Dynamically Populated -->
+        </div>
+      </section>
+
+      <!-- VIEW 4: RECENT / TERKINI -->
+      <section id="view-recent" class="view-content space-y-6 hidden">
+        <h2 class="font-title text-2xl font-bold text-princess-text">Lembaran Kerja Terkini</h2>
+        <div id="recent-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Dynamically Populated -->
+        </div>
+      </section>
+
+      <!-- VIEW 5: SETTINGS / TETAPAN -->
+      <section id="view-settings" class="view-content space-y-6 hidden max-w-2xl">
+        <h2 class="font-title text-2xl font-bold text-princess-text">Tetapan Akaun & Aplikasi</h2>
+        
+        <div class="bg-white rounded-3xl p-6 border border-princess-lavender shadow-sm space-y-6">
+          <div class="space-y-1">
+            <h3 class="font-title font-bold text-lg text-gray-800">Profil Pengguna</h3>
+            <p class="text-xs text-gray-500">Maklumat sesi pendaftaran dan perkongsian peranti.</p>
+          </div>
+
+          <div class="space-y-4 text-sm">
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="text-gray-500">Nama Pengguna</span>
+              <span class="font-bold text-gray-800">Puteri Keischa</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="text-gray-500">Status Awan</span>
+              <span class="font-bold text-green-600 flex items-center gap-1">
+                <i class="fa-solid fa-circle-check"></i> Terhubung (Firebase)
+              </span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100">
+            <button onclick="handleLogout()" class="w-full bg-red-50 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Log Keluar dari Peranti Ini</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MODAL: ADD / NEW FOLDER -->
+  <div id="modal-add-folder" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md border-2 border-princess-pink shadow-2xl space-y-6 transform transition-all">
+      <div class="flex justify-between items-center">
+        <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-princess-pink"></i>
+          <span>Tambah Folder Baru</span>
+        </h3>
+        <button onclick="closeAddFolderModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Nama Folder (Bahasa Melayu)</label>
+          <input 
+            type="text" 
+            id="new-folder-name" 
+            placeholder="cth: Muzik & Seni" 
+            class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Ikon Folder</label>
+          <div class="flex gap-3 text-xl" id="icon-selector">
+            <button type="button" onclick="selectFolderIcon('fa-book')" class="icon-opt p-3 rounded-2xl border-2 border-princess-pink bg-princess-pink-light text-pink-600"><i class="fa-solid fa-book"></i></button>
+            <button type="button" onclick="selectFolderIcon('fa-calculator')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-calculator"></i></button>
+            <button type="button" onclick="selectFolderIcon('fa-flask')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-flask"></i></button>
+            <button type="button" onclick="selectFolderIcon('fa-palette')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-palette"></i></button>
+            <button type="button" onclick="selectFolderIcon('fa-gamepad')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-gamepad"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3 pt-2">
+        <button onclick="closeAddFolderModal()" class="flex-1 py-3 rounded-2xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 text-sm">Batal</button>
+        <button onclick="createNewFolder()" class="flex-1 py-3 rounded-2xl bg-princess-pink text-white font-title font-bold hover:bg-pink-400 text-sm shadow-md">Simpan Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIDDEN FILE INPUT FOR PDF IMPORT -->
+  <input type="file" id="pdf-file-input" accept="application/pdf" multiple class="hidden" onchange="handleFileSelected(event)" />
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    // Initial Application State (Default Folders in Bahasa Melayu)
+    let appState = {
+      selectedFolderId: null,
+      selectedIcon: 'fa-book',
+      folders: [
+        { id: 'bm', name: 'Bahasa Melayu', icon: 'fa-book', color: 'bg-pink-100 text-pink-600 border-pink-200' },
+        { id: 'bi', name: 'Bahasa Inggeris', icon: 'fa-language', color: 'bg-purple-100 text-purple-600 border-purple-200' },
+        { id: 'mt', name: 'Matematik', icon: 'fa-calculator', color: 'bg-blue-100 text-blue-600 border-blue-200' },
+        { id: 'sn', name: 'Sains', icon: 'fa-flask', color: 'bg-teal-100 text-teal-600 border-teal-200' },
+        { id: 'jw', name: 'Jawi', icon: 'fa-pen-nib', color: 'bg-amber-100 text-amber-600 border-amber-200' },
+        { id: 'pi', name: 'Pendidikan Islam', icon: 'fa-mosque', color: 'bg-emerald-100 text-emerald-600 border-emerald-200' },
+        { id: 'mw', name: 'Mewarna', icon: 'fa-palette', color: 'bg-rose-100 text-rose-600 border-rose-200' },
+        { id: 'gm', name: 'Game', icon: 'fa-gamepad', color: 'bg-indigo-100 text-indigo-600 border-indigo-200' }
+      ],
+      worksheets: [
+        { id: 'ws1', title: 'Latihan Abjad & Ejaan A-Z', folderId: 'bm', pageCount: 4, lastOpened: '10 Minit Lalu', lastPage: 2 },
+        { id: 'ws2', title: 'English Sight Words Vol 1', folderId: 'bi', pageCount: 10, lastOpened: 'Semalam', lastPage: 1 },
+        { id: 'ws3', title: 'Tambah & Tolak Comel', folderId: 'mt', pageCount: 6, lastOpened: '2 Hari Lalu', lastPage: 4 }
+      ]
+    };
+
+    // DOM Ready Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavigation();
+      renderHomeView();
+    });
+
+    // Navigation & UI View Switching Engine
+    function initNavigation() {
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+      }
+
+      mobileMenuBtn.addEventListener('click', toggleSidebar);
+      closeSidebarBtn.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    }
+
+    function switchView(viewName, folderId = null) {
+      // Hide all view sections
+      document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+
+      // Update Nav active styling
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('bg-princess-pink-light', 'text-pink-600');
+        el.classList.add('text-gray-600');
+      });
+
+      const activeNav = document.getElementById(`nav-${viewName}`);
+      if (activeNav) {
+        activeNav.classList.add('bg-princess-pink-light', 'text-pink-600');
+      }
+
+      // Route view
+      if (viewName === 'home') {
+        renderHomeView();
+        document.getElementById('view-home').classList.remove('hidden');
+      } else if (viewName === 'folders') {
+        renderFoldersView();
+        document.getElementById('view-folders').classList.remove('hidden');
+      } else if (viewName === 'folder-detail' && folderId) {
+        renderFolderDetailView(folderId);
+        document.getElementById('view-folder-detail').classList.remove('hidden');
+      } else if (viewName === 'recent') {
+        renderRecentView();
+        document.getElementById('view-recent').classList.remove('hidden');
+      } else if (viewName === 'settings') {
+        document.getElementById('view-settings').classList.remove('hidden');
+      }
+
+      // Close mobile sidebar if open
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('sidebar-overlay').classList.add('hidden');
+    }
+
+    // Render Home View
+    function renderHomeView() {
+      // 1. Render Subject Folders
+      const foldersGrid = document.getElementById('folders-grid');
+      foldersGrid.innerHTML = '';
+
+      appState.folders.forEach(folder => {
+        const count = appState.worksheets.filter(w => w.folderId === folder.id).length;
+        foldersGrid.innerHTML += `
+          <div onclick="switchView('folder-detail', '${folder.id}')" class="folder-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-36 relative overflow-hidden group">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl ${folder.color || 'bg-pink-100 text-pink-600'} flex items-center justify-center text-lg">
+                <i class="fa-solid ${folder.icon}"></i>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">${count} PDF</span>
+            </div>
+            <div>
+              <h4 class="font-title font-bold text-gray-800 text-sm group-hover:text-pink-600 transition-colors">${folder.name}</h4>
+              <p class="text-[10px] text-gray-400">Tekan untuk buka</p>
+            </div>
+          </div>
+        `;
+      });
+
+      // 2. Render Continue Learning Items
+      const continueContainer = document.getElementById('continue-learning-container');
+      continueContainer.innerHTML = '';
+
+      if (appState.worksheets.length === 0) {
+        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja terkini. Sila import file PDF.</p>`;
+        return;
+      }
+
+      appState.worksheets.slice(0, 3).forEach(ws => {
+        const folder = appState.folders.find(f => f.id === ws.folderId);
+        continueContainer.innerHTML += `
+          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
+            <div class="w-12 h-14 bg-princess-pink-light rounded-xl border border-princess-pink/40 flex items-center justify-center text-princess-pink shrink-0">
+              <i class="fa-solid fa-file-pdf text-2xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
+              <h5 class="font-title font-bold text-sm text-gray-800 truncate mt-1">${ws.title}</h5>
+              <p class="text-[10px] text-gray-400 mt-0.5">Muka Surat ${ws.lastPage} / ${ws.pageCount} • ${ws.lastOpened}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Render Full Folders View
+    function renderFoldersView() {
+      const fullGrid = document.getElementById('full-folders-grid');
+      fullGrid.innerHTML = '';
+
+      appState.folders.forEach(folder => {
+        const count = appState.worksheets.filter(w => w.folderId === folder.id).length;
+        fullGrid.innerHTML += `
+          <div onclick="switchView('folder-detail', '${folder.id}')" class="folder-card bg-white p-5 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-40">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl ${folder.color || 'bg-pink-100 text-pink-600'} flex items-center justify-center text-xl">
+                <i class="fa-solid ${folder.icon}"></i>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full">${count} Item</span>
+            </div>
+            <div>
+              <h4 class="font-title font-bold text-gray-800 text-base">${folder.name}</h4>
+              <p class="text-xs text-gray-400">Kemaskini Terkini</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Render Folder Detail View
+    function renderFolderDetailView(folderId) {
+      appState.selectedFolderId = folderId;
+      const folder = appState.folders.find(f => f.id === folderId);
+      const worksheets = appState.worksheets.filter(w => w.folderId === folderId);
+
+      document.getElementById('current-folder-title').innerText = folder ? folder.name : 'Folder';
+      document.getElementById('current-folder-subtitle').innerText = `${worksheets.length} Lembaran Kerja`;
+
+      const grid = document.getElementById('folder-worksheets-grid');
+      grid.innerHTML = '';
+
+      if (worksheets.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center space-y-3">
+            <i class="fa-solid fa-folder-open text-4xl text-gray-300"></i>
+            <p class="text-sm font-semibold text-gray-400">Folder ini masih kosong</p>
+            <button onclick="triggerImportPDF()" class="text-xs bg-princess-pink text-white px-4 py-2 rounded-full font-bold">Import PDF Sekarang</button>
+          </div>
+        `;
+        return;
+      }
+
+      worksheets.forEach(ws => {
+        grid.innerHTML += `
+          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
+            <div class="w-full h-24 bg-princess-lavender-light rounded-2xl border border-princess-lavender/50 flex items-center justify-center text-purple-400">
+              <i class="fa-solid fa-file-pdf text-3xl"></i>
+            </div>
+            <div>
+              <h5 class="font-title font-bold text-xs text-gray-800 truncate">${ws.title}</h5>
+              <p class="text-[10px] text-gray-400 mt-0.5">${ws.pageCount} Muka Surat</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Render Recent View
+    function renderRecentView() {
+      const grid = document.getElementById('recent-worksheets-grid');
+      grid.innerHTML = '';
+
+      appState.worksheets.forEach(ws => {
+        const folder = appState.folders.find(f => f.id === ws.folderId);
+        grid.innerHTML += `
+          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
+            <div class="w-full h-24 bg-princess-pink-light rounded-2xl border border-princess-pink/30 flex items-center justify-center text-pink-400">
+              <i class="fa-solid fa-file-pdf text-3xl"></i>
+            </div>
+            <div>
+              <span class="text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
+              <h5 class="font-title font-bold text-xs text-gray-800 truncate mt-1">${ws.title}</h5>
+              <p class="text-[10px] text-gray-400 mt-0.5">${ws.lastOpened}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Global Search Handling
+    function handleSearch(query) {
+      if (!query.trim()) {
+        renderHomeView();
+        return;
+      }
+      const filtered = appState.worksheets.filter(w => w.title.toLowerCase().includes(query.toLowerCase()));
+      const continueContainer = document.getElementById('continue-learning-container');
+      continueContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja ditemui untuk "${query}"</p>`;
+        return;
+      }
+
+      filtered.forEach(ws => {
+        const folder = appState.folders.find(f => f.id === ws.folderId);
+        continueContainer.innerHTML += `
+          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
+            <div class="w-12 h-14 bg-princess-pink-light rounded-xl border border-princess-pink/40 flex items-center justify-center text-princess-pink shrink-0">
+              <i class="fa-solid fa-file-pdf text-2xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
+              <h5 class="font-title font-bold text-sm text-gray-800 truncate mt-1">${ws.title}</h5>
+              <p class="text-[10px] text-gray-400 mt-0.5">Muka Surat ${ws.lastPage} / ${ws.pageCount}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Modal Handling Functions
+    function openAddFolderModal() {
+      document.getElementById('modal-add-folder').classList.remove('hidden');
+    }
+
+    function closeAddFolderModal() {
+      document.getElementById('modal-add-folder').classList.add('hidden');
+      document.getElementById('new-folder-name').value = '';
+    }
+
+    function selectFolderIcon(iconClass) {
+      appState.selectedIcon = iconClass;
+      document.querySelectorAll('#icon-selector .icon-opt').forEach(btn => {
+        btn.classList.remove('border-princess-pink', 'bg-princess-pink-light', 'text-pink-600');
+        btn.classList.add('border-transparent', 'bg-gray-100', 'text-gray-500');
+      });
+      event.currentTarget.classList.remove('border-transparent', 'bg-gray-100', 'text-gray-500');
+      event.currentTarget.classList.add('border-princess-pink', 'bg-princess-pink-light', 'text-pink-600');
+    }
+
+    function createNewFolder() {
+      const nameInput = document.getElementById('new-folder-name').value.trim();
+      if (!nameInput) {
+        alert('Sila masukkan nama folder!');
+        return;
+      }
+
+      const newFolder = {
+        id: 'f_' + Date.now(),
+        name: nameInput,
+        icon: appState.selectedIcon,
+        color: 'bg-purple-100 text-purple-600 border-purple-200'
+      };
+
+      appState.folders.push(newFolder);
+      closeAddFolderModal();
+      renderHomeView();
+    }
+
+    // PDF Import Handler Setup
+    function triggerImportPDF() {
+      document.getElementById('pdf-file-input').click();
+    }
+
+    function handleFileSelected(event) {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      const targetFolderId = appState.selectedFolderId || appState.folders[0].id;
+
+      Array.from(files).forEach((file, index) => {
+        if (file.type !== 'application/pdf') {
+          alert(`Fail ${file.name} bukan berformat PDF!`);
+          return;
+        }
+
+        const newWorksheet = {
+          id: 'ws_' + Date.now() + '_' + index,
+          title: file.name.replace('.pdf', ''),
+          folderId: targetFolderId,
+          pageCount: 1, // Will be read dynamically by PDF.js in Phase 4
+          lastOpened: 'Baru Diumport',
+          lastPage: 1
+        };
+
+        appState.worksheets.unshift(newWorksheet);
+      });
+
+      alert(`${files.length} lembaran kerja berjaya diimport!`);
+      renderHomeView();
+    }
+
+    // Viewer Placeholder for Phase 1 Setup
+    function openWorksheetViewer(wsId) {
+      const ws = appState.worksheets.find(w => w.id === wsId);
+      alert(`Membuka Lembaran Kerja: "${ws.title}". Engine PDF Annotation Canvas akan diaktifkan dalam Fasa seterusnya.`);
+    }
+
+    function handleLogout() {
+      if (confirm('Adakah anda pasti untuk log keluar?')) {
+        alert('Sesi telah diakhiri. Sila log masuk semula.');
+      }
+    }
+  </script>
+</body>
+</html>
