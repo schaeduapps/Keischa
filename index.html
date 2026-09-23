@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Keischa - My Princess Worksheet</title>
 
-  <!-- Google Fonts: Fredoka & Quicksand for a friendly princess vibe -->
+  <!-- Google Fonts: Fredoka & Quicksand -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,12 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
+  <!-- PDF.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
     tailwind.config = {
       theme: {
         extend: {
@@ -58,22 +63,12 @@
     }
 
     /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #F3EEFA;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #E2D4F0;
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #FFB7B2;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F3EEFA; }
+    ::-webkit-scrollbar-thumb { background: #E2D4F0; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FFB7B2; }
 
-    /* Princess Sparkle Background Effect */
+    /* Sparkle Background */
     .sparkle-bg {
       background-image: 
         radial-gradient(circle, rgba(229,193,88,0.2) 1px, transparent 1px),
@@ -82,34 +77,84 @@
       background-position: 0 0, 12px 12px;
     }
 
-    /* Tiara / Crown Header Border */
     .tiara-border {
       border-bottom: 3px solid var(--gold-accent);
       box-shadow: 0 4px 12px rgba(229, 193, 88, 0.15);
     }
 
-    /* Interactive Card Transitions */
-    .folder-card {
+    .folder-card, .worksheet-card {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .folder-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 20px rgba(181, 234, 215, 0.3);
-    }
-    .folder-card:active {
-      transform: translateY(-1px);
-    }
-
-    .worksheet-card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .worksheet-card:hover {
+    .folder-card:hover, .worksheet-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 16px rgba(226, 212, 240, 0.4);
+    }
+
+    /* Annotation Layers Container */
+    #pdf-container {
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #ffffff;
+      touch-action: none;
+    }
+
+    #pdf-canvas, #annotation-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #annotation-canvas {
+      z-index: 10;
+      cursor: crosshair;
+    }
+
+    .text-annotation-input {
+      position: absolute;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.5px dashed #FFB7B2;
+      border-radius: 6px;
+      outline: none;
+      padding: 2px 6px;
+      font-family: 'Fredoka', sans-serif;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body class="sparkle-bg min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+  <!-- AUTH MODAL / SCREEN (PHASE 2) -->
+  <div id="auth-overlay" class="fixed inset-0 z-50 bg-princess-cream flex items-center justify-center p-4 sparkle-bg">
+    <div class="bg-white/90 backdrop-blur-md p-8 rounded-3xl border-2 border-princess-pink shadow-2xl w-full max-w-md space-y-6">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-full bg-princess-pink-light border-2 border-princess-gold flex items-center justify-center mx-auto shadow-md">
+          <i class="fa-solid fa-crown text-princess-gold text-2xl"></i>
+        </div>
+        <h2 class="font-title text-2xl font-bold text-princess-text">My Princess Worksheet</h2>
+        <p class="text-xs text-gray-500">Log masuk untuk menyinkronkan lembaran kerja anda.</p>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-600 uppercase mb-1">E-mel</label>
+          <input type="email" id="auth-email" required placeholder="puteri@keischa.app" class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Kata Laluan</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink" />
+        </div>
+
+        <div id="auth-error" class="text-xs text-red-500 font-bold hidden text-center"></div>
+
+        <button type="submit" id="auth-btn-submit" class="w-full py-3 bg-gradient-to-r from-pink-400 to-princess-pink text-white font-title font-bold rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95">
+          Log Masuk / Daftar
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- MOBILE HEADER TOP BAR -->
   <header class="md:hidden bg-white/90 backdrop-blur-md px-4 py-3 tiara-border flex items-center justify-between sticky top-0 z-30">
@@ -118,10 +163,9 @@
       <span class="font-title text-xl font-bold text-princess-text">Keischa</span>
     </div>
     <div class="flex items-center space-x-3">
-      <!-- Sync Status Badge -->
       <span id="sync-status-mobile" class="text-xs px-2.5 py-1 rounded-full bg-princess-lavender-light text-purple-700 font-semibold flex items-center gap-1.5">
         <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-        <span>Telah Disimpan</span>
+        <span class="sync-text">Telah Disimpan</span>
       </span>
       <button id="mobile-menu-btn" class="text-princess-text p-2 rounded-lg hover:bg-princess-pink-light">
         <i class="fa-solid fa-bars text-lg"></i>
@@ -129,10 +173,9 @@
     </div>
   </header>
 
-  <!-- SIDEBAR / NAVIGATION (Responsive Desktop Left Drawer / Mobile Drawer) -->
+  <!-- SIDEBAR NAVIGATION -->
   <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white/95 backdrop-blur-md border-r border-princess-pink/30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-xl md:shadow-none md:static">
     <div>
-      <!-- App Header Branding -->
       <div class="p-5 flex items-center justify-between border-b border-princess-lavender/50">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-full bg-princess-pink-light border-2 border-princess-gold flex items-center justify-center shadow-sm">
@@ -148,7 +191,6 @@
         </button>
       </div>
 
-      <!-- Navigation Links -->
       <nav class="p-4 space-y-2">
         <a href="#" id="nav-home" onclick="switchView('home')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-2xl font-semibold bg-princess-pink-light text-pink-600 transition-colors">
           <i class="fa-solid fa-house text-lg w-6"></i>
@@ -169,15 +211,14 @@
       </nav>
     </div>
 
-    <!-- User Account Status Card -->
     <div class="p-4 border-t border-princess-lavender/50 bg-princess-lavender-light/30">
       <div class="flex items-center space-x-3 p-2 bg-white rounded-xl border border-princess-lavender">
         <div class="w-9 h-9 rounded-full bg-princess-pink flex items-center justify-center text-white font-bold">
           <i class="fa-solid fa-user-large text-sm"></i>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold text-gray-800 truncate" id="user-display-name">Puteri Keischa</p>
-          <p class="text-[10px] text-gray-500 truncate" id="user-display-email font-mono">keischa@princess.app</p>
+          <p class="text-xs font-bold text-gray-800 truncate" id="user-display-name">Tetamu</p>
+          <p class="text-[10px] text-gray-500 truncate" id="user-display-email">Log masuk disemak...</p>
         </div>
         <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg" title="Log Keluar">
           <i class="fa-solid fa-right-from-bracket text-xs"></i>
@@ -186,7 +227,6 @@
     </div>
   </aside>
 
-  <!-- OVERLAY FOR MOBILE SIDEBAR -->
   <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 hidden md:hidden"></div>
 
   <!-- MAIN CONTENT AREA -->
@@ -194,23 +234,15 @@
 
     <!-- DESKTOP TOP BAR -->
     <header class="hidden md:flex bg-white/80 backdrop-blur-md px-8 py-4 border-b border-princess-lavender justify-between items-center sticky top-0 z-20">
-      <!-- Search Input -->
       <div class="relative w-80">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-        <input 
-          type="text" 
-          id="global-search" 
-          oninput="handleSearch(this.value)"
-          placeholder="Cari lembaran kerja..." 
-          class="w-full pl-10 pr-4 py-2 bg-princess-lavender-light/50 border border-princess-lavender rounded-full text-sm text-princess-text focus:outline-none focus:ring-2 focus:ring-princess-pink focus:bg-white transition-all"
-        />
+        <input type="text" id="global-search" oninput="handleSearch(this.value)" placeholder="Cari lembaran kerja..." class="w-full pl-10 pr-4 py-2 bg-princess-lavender-light/50 border border-princess-lavender rounded-full text-sm text-princess-text focus:outline-none focus:ring-2 focus:ring-princess-pink" />
       </div>
 
-      <!-- Action Buttons & Status -->
       <div class="flex items-center space-x-4">
         <span id="sync-status-desktop" class="text-xs px-3 py-1.5 rounded-full bg-princess-lavender-light text-purple-700 font-semibold flex items-center gap-2 border border-purple-200">
           <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-          <span>Telah Disimpan</span>
+          <span class="sync-text">Telah Disimpan</span>
         </span>
 
         <button onclick="triggerImportPDF()" class="bg-gradient-to-r from-pink-400 to-princess-pink text-white font-title px-5 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center space-x-2 font-semibold active:scale-95">
@@ -220,24 +252,19 @@
       </div>
     </header>
 
-    <!-- VIEWS CONTAINER -->
-    <div class="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto w-full">
+    <div class="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
 
       <!-- VIEW 1: HOME PAGE -->
       <section id="view-home" class="view-content space-y-8">
-        
-        <!-- Welcome Banner -->
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-princess-pink-light via-princess-lavender-light to-princess-blue p-6 sm:p-8 border-2 border-white shadow-lg">
           <div class="relative z-10 space-y-2 max-w-xl">
             <span class="px-3 py-1 bg-white/80 text-pink-600 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm">Selamat Datang ✨</span>
             <h2 class="font-title text-2xl sm:text-3xl font-bold text-princess-text">Mari Belajar Hari Ini, Puteri! 👑</h2>
             <p class="text-sm text-gray-600 leading-relaxed">Pilih folder subjek di bawah atau sambung terus lembaran kerja yang telah anda mulakan.</p>
           </div>
-          <!-- Decorative Background Elements -->
           <i class="fa-solid fa-wand-magic-sparkles absolute right-4 bottom-2 text-7xl text-pink-300/30 -rotate-12 pointer-events-none"></i>
         </div>
 
-        <!-- Continue Learning Section -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
@@ -246,31 +273,21 @@
             </h3>
             <button onclick="switchView('recent')" class="text-xs font-bold text-pink-500 hover:underline">Lihat Semua</button>
           </div>
-
-          <div id="continue-learning-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Dynamically Populated by JS -->
-          </div>
+          <div id="continue-learning-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- Subject Folders Section -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
               <i class="fa-solid fa-folder-open text-purple-400"></i>
               <span>Folder Saya</span>
             </h3>
-            <button onclick="openAddFolderModal()" class="text-xs bg-white border border-princess-lavender font-bold text-purple-600 px-3 py-1.5 rounded-full hover:bg-princess-lavender-light flex items-center gap-1.5 transition-colors shadow-sm">
-              <i class="fa-solid fa-plus"></i>
-              <span>Tambah Folder</span>
+            <button onclick="openAddFolderModal()" class="text-xs bg-white border border-princess-lavender font-bold text-purple-600 px-3 py-1.5 rounded-full hover:bg-princess-lavender-light transition-colors shadow-sm">
+              <i class="fa-solid fa-plus mr-1"></i>Tambah Folder
             </button>
           </div>
-
-          <!-- Subject Folders Grid -->
-          <div id="folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            <!-- Dynamically Rendered by JS -->
-          </div>
+          <div id="folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
         </div>
-
       </section>
 
       <!-- VIEW 2: FOLDERS PAGE -->
@@ -281,19 +298,14 @@
             <p class="text-xs text-gray-500">Urus folder dan susun lembaran kerja anda.</p>
           </div>
           <button onclick="openAddFolderModal()" class="bg-princess-lavender font-title text-purple-800 px-4 py-2 rounded-2xl font-bold hover:bg-purple-200 transition-colors flex items-center gap-2">
-            <i class="fa-solid fa-plus"></i>
-            <span>Tambah Folder Baru</span>
+            <i class="fa-solid fa-plus"></i><span>Tambah Folder Baru</span>
           </button>
         </div>
-
-        <div id="full-folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Dynamically Populated -->
-        </div>
+        <div id="full-folders-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
       </section>
 
       <!-- VIEW 3: SINGLE FOLDER DETAIL VIEW -->
       <section id="view-folder-detail" class="view-content space-y-6 hidden">
-        <!-- Back and Folder Header -->
         <div class="flex items-center justify-between border-b border-princess-lavender pb-4">
           <div class="flex items-center space-x-3">
             <button onclick="switchView('home')" class="p-2 rounded-full hover:bg-princess-pink-light text-gray-600">
@@ -304,56 +316,95 @@
               <p id="current-folder-subtitle" class="text-xs text-gray-500">0 Lembaran Kerja</p>
             </div>
           </div>
-
-          <div class="flex items-center space-x-2">
-            <button onclick="triggerImportPDF()" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400 transition-colors">
-              <i class="fa-solid fa-plus mr-1"></i> Tambah PDF
-            </button>
-          </div>
+          <button onclick="triggerImportPDF()" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400">
+            <i class="fa-solid fa-plus mr-1"></i> Tambah PDF
+          </button>
         </div>
-
-        <!-- Worksheets Grid in Folder -->
-        <div id="folder-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Dynamically Populated -->
-        </div>
+        <div id="folder-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
       </section>
 
-      <!-- VIEW 4: RECENT / TERKINI -->
+      <!-- VIEW 4: RECENT -->
       <section id="view-recent" class="view-content space-y-6 hidden">
         <h2 class="font-title text-2xl font-bold text-princess-text">Lembaran Kerja Terkini</h2>
-        <div id="recent-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Dynamically Populated -->
-        </div>
+        <div id="recent-worksheets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
       </section>
 
-      <!-- VIEW 5: SETTINGS / TETAPAN -->
+      <!-- VIEW 5: SETTINGS -->
       <section id="view-settings" class="view-content space-y-6 hidden max-w-2xl">
         <h2 class="font-title text-2xl font-bold text-princess-text">Tetapan Akaun & Aplikasi</h2>
-        
         <div class="bg-white rounded-3xl p-6 border border-princess-lavender shadow-sm space-y-6">
-          <div class="space-y-1">
-            <h3 class="font-title font-bold text-lg text-gray-800">Profil Pengguna</h3>
-            <p class="text-xs text-gray-500">Maklumat sesi pendaftaran dan perkongsian peranti.</p>
-          </div>
-
           <div class="space-y-4 text-sm">
             <div class="flex justify-between py-2 border-b border-gray-100">
-              <span class="text-gray-500">Nama Pengguna</span>
-              <span class="font-bold text-gray-800">Puteri Keischa</span>
+              <span class="text-gray-500">E-mel Pengguna</span>
+              <span id="settings-user-email" class="font-bold text-gray-800">-</span>
             </div>
             <div class="flex justify-between py-2 border-b border-gray-100">
-              <span class="text-gray-500">Status Awan</span>
+              <span class="text-gray-500">Penyinkronan Awan</span>
               <span class="font-bold text-green-600 flex items-center gap-1">
-                <i class="fa-solid fa-circle-check"></i> Terhubung (Firebase)
+                <i class="fa-solid fa-circle-check"></i> Firebase Realtime Active
               </span>
             </div>
           </div>
+          <button onclick="handleLogout()" class="w-full bg-red-50 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Log Keluar dari Peranti Ini</span>
+          </button>
+        </div>
+      </section>
 
-          <div class="pt-4 border-t border-gray-100">
-            <button onclick="handleLogout()" class="w-full bg-red-50 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
-              <i class="fa-solid fa-right-from-bracket"></i>
-              <span>Log Keluar dari Peranti Ini</span>
+      <!-- VIEW 6: PDF VIEWER & CANVAS ANNOTATION EDITOR (PHASE 4 & 5) -->
+      <section id="view-pdf-editor" class="view-content hidden flex-1 flex flex-col space-y-4 h-full">
+        <!-- Top Toolbar -->
+        <div class="bg-white rounded-2xl p-3 border border-princess-lavender shadow-md flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
+          <div class="flex items-center space-x-2">
+            <button onclick="closePDFEditor()" class="p-2 rounded-xl hover:bg-gray-100 text-gray-600">
+              <i class="fa-solid fa-arrow-left text-lg"></i>
             </button>
+            <h3 id="pdf-file-name" class="font-title font-bold text-sm text-princess-text truncate max-w-[150px] sm:max-w-xs">Dokumen.pdf</h3>
+          </div>
+
+          <!-- Tools Palette -->
+          <div class="flex items-center bg-princess-lavender-light/60 p-1.5 rounded-2xl space-x-1">
+            <button onclick="setActiveTool('pen')" id="tool-pen" class="tool-btn p-2.5 rounded-xl text-gray-600 hover:bg-white active-tool"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="setActiveTool('highlighter')" id="tool-highlighter" class="tool-btn p-2.5 rounded-xl text-gray-600 hover:bg-white"><i class="fa-solid fa-highlighter"></i></button>
+            <button onclick="setActiveTool('eraser')" id="tool-eraser" class="tool-btn p-2.5 rounded-xl text-gray-600 hover:bg-white"><i class="fa-solid fa-eraser"></i></button>
+            <button onclick="setActiveTool('text')" id="tool-text" class="tool-btn p-2.5 rounded-xl text-gray-600 hover:bg-white"><i class="fa-solid fa-font"></i></button>
+            <div class="h-5 w-[1px] bg-gray-300 mx-1"></div>
+            <button onclick="undoAnnotation()" class="p-2.5 rounded-xl text-gray-600 hover:bg-white"><i class="fa-solid fa-rotate-left"></i></button>
+            <button onclick="redoAnnotation()" class="p-2.5 rounded-xl text-gray-600 hover:bg-white"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+
+          <!-- Tool Options (Color, Size) -->
+          <div class="flex items-center space-x-3">
+            <input type="color" id="tool-color" value="#4A3E3D" onchange="updateToolSettings()" class="w-8 h-8 rounded-full border-none cursor-pointer bg-transparent" />
+            <select id="tool-size" onchange="updateToolSettings()" class="bg-gray-100 border border-gray-200 rounded-xl px-2 py-1 text-xs font-bold text-gray-700">
+              <option value="2">Nipis</option>
+              <option value="5" selected>Sederhana</option>
+              <option value="12">Tebal</option>
+              <option value="24">Sangat Tebal</option>
+            </select>
+          </div>
+
+          <!-- Navigation & Zoom Controls -->
+          <div class="flex items-center space-x-2">
+            <button onclick="zoomPDF(-0.15)" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold"><i class="fa-solid fa-minus"></i></button>
+            <span id="zoom-percentage" class="text-xs font-bold text-gray-600 w-10 text-center">100%</span>
+            <button onclick="zoomPDF(0.15)" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold"><i class="fa-solid fa-plus"></i></button>
+            
+            <div class="h-5 w-[1px] bg-gray-300 mx-1"></div>
+
+            <button onclick="changePDFPage(-1)" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="page-indicator" class="text-xs font-bold text-gray-700">1 / 1</span>
+            <button onclick="changePDFPage(1)" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Scrollable Workspace -->
+        <div class="flex-1 overflow-auto flex justify-center items-start p-4 bg-gray-200/50 rounded-3xl border border-princess-lavender" id="pdf-viewport-wrapper">
+          <div id="pdf-container">
+            <canvas id="pdf-canvas"></canvas>
+            <canvas id="annotation-canvas"></canvas>
+            <div id="text-annotations-layer"></div>
           </div>
         </div>
       </section>
@@ -361,42 +412,22 @@
     </div>
   </main>
 
-  <!-- MODAL: ADD / NEW FOLDER -->
+  <!-- MODAL: ADD FOLDER -->
   <div id="modal-add-folder" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-md border-2 border-princess-pink shadow-2xl space-y-6 transform transition-all">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md border-2 border-princess-pink shadow-2xl space-y-6">
       <div class="flex justify-between items-center">
         <h3 class="font-title text-xl font-bold text-princess-text flex items-center gap-2">
           <i class="fa-solid fa-folder-plus text-princess-pink"></i>
           <span>Tambah Folder Baru</span>
         </h3>
-        <button onclick="closeAddFolderModal()" class="text-gray-400 hover:text-gray-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closeAddFolderModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Nama Folder (Bahasa Melayu)</label>
-          <input 
-            type="text" 
-            id="new-folder-name" 
-            placeholder="cth: Muzik & Seni" 
-            class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Ikon Folder</label>
-          <div class="flex gap-3 text-xl" id="icon-selector">
-            <button type="button" onclick="selectFolderIcon('fa-book')" class="icon-opt p-3 rounded-2xl border-2 border-princess-pink bg-princess-pink-light text-pink-600"><i class="fa-solid fa-book"></i></button>
-            <button type="button" onclick="selectFolderIcon('fa-calculator')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-calculator"></i></button>
-            <button type="button" onclick="selectFolderIcon('fa-flask')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-flask"></i></button>
-            <button type="button" onclick="selectFolderIcon('fa-palette')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-palette"></i></button>
-            <button type="button" onclick="selectFolderIcon('fa-gamepad')" class="icon-opt p-3 rounded-2xl border-2 border-transparent bg-gray-100 text-gray-500"><i class="fa-solid fa-gamepad"></i></button>
-          </div>
+          <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Nama Folder</label>
+          <input type="text" id="new-folder-name" placeholder="cth: Muzik & Seni" class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink" />
         </div>
       </div>
-
       <div class="flex space-x-3 pt-2">
         <button onclick="closeAddFolderModal()" class="flex-1 py-3 rounded-2xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 text-sm">Batal</button>
         <button onclick="createNewFolder()" class="flex-1 py-3 rounded-2xl bg-princess-pink text-white font-title font-bold hover:bg-pink-400 text-sm shadow-md">Simpan Folder</button>
@@ -404,12 +435,53 @@
     </div>
   </div>
 
-  <!-- HIDDEN FILE INPUT FOR PDF IMPORT -->
   <input type="file" id="pdf-file-input" accept="application/pdf" multiple class="hidden" onchange="handleFileSelected(event)" />
 
-  <!-- JAVASCRIPT APP LOGIC -->
+  <!-- FIREBASE MODULE INTEGRATION (PHASE 2 & 3 & 6) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0CV_oGngC3ldjvAPYtI5LYFEYJswMzLc",
+      authDomain: "keischa.firebaseapp.com",
+      databaseURL: "https://keischa-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "keischa",
+      storageBucket: "keischa.firebasestorage.app",
+      messagingSenderId: "215718836175",
+      appId: "1:215718836175:web:9ef9abab38d98733bd44ba"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    window.fbAuth = auth;
+    window.fbDb = db;
+    window.fbStorage = storage;
+    window.fbServices = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, doc, setDoc, getDoc, getDocs, collection, query, where, ref, uploadBytes, getDownloadURL };
+
+    // Persistent Login Observer
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        window.currentUser = user;
+        document.getElementById('auth-overlay').classList.add('hidden');
+        document.getElementById('user-display-email').innerText = user.email;
+        document.getElementById('user-display-name').innerText = user.email.split('@')[0];
+        document.getElementById('settings-user-email').innerText = user.email;
+        await syncDataFromCloud();
+      } else {
+        window.currentUser = null;
+        document.getElementById('auth-overlay').classList.remove('hidden');
+      }
+    });
+  </script>
+
+  <!-- MAIN APP ENGINE -->
   <script>
-    // Initial Application State (Default Folders in Bahasa Melayu)
     let appState = {
       selectedFolderId: null,
       selectedIcon: 'fa-book',
@@ -423,20 +495,63 @@
         { id: 'mw', name: 'Mewarna', icon: 'fa-palette', color: 'bg-rose-100 text-rose-600 border-rose-200' },
         { id: 'gm', name: 'Game', icon: 'fa-gamepad', color: 'bg-indigo-100 text-indigo-600 border-indigo-200' }
       ],
-      worksheets: [
-        { id: 'ws1', title: 'Latihan Abjad & Ejaan A-Z', folderId: 'bm', pageCount: 4, lastOpened: '10 Minit Lalu', lastPage: 2 },
-        { id: 'ws2', title: 'English Sight Words Vol 1', folderId: 'bi', pageCount: 10, lastOpened: 'Semalam', lastPage: 1 },
-        { id: 'ws3', title: 'Tambah & Tolak Comel', folderId: 'mt', pageCount: 6, lastOpened: '2 Hari Lalu', lastPage: 4 }
-      ]
+      worksheets: []
     };
 
-    // DOM Ready Initialization
+    let activePDF = null;
+    let pdfDoc = null;
+    let pdfScale = 1.0;
+    let currentPage = 1;
+    let activeTool = 'pen';
+    let toolSettings = { color: '#4A3E3D', size: 5, opacity: 1.0 };
+    
+    // Annotation Structures per Page: { [pageNumber]: [ strokes / textObjects ] }
+    let pageAnnotations = {};
+    let undoStack = [];
+    let redoStack = [];
+    let isDrawing = false;
+    let currentPath = [];
+    let saveDebounceTimer = null;
+
     document.addEventListener('DOMContentLoaded', () => {
       initNavigation();
+      initCanvasEvents();
       renderHomeView();
     });
 
-    // Navigation & UI View Switching Engine
+    // Auth Form Logic (Phase 2)
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const errBox = document.getElementById('auth-error');
+      errBox.classList.add('hidden');
+
+      try {
+        await window.fbServices.signInWithEmailAndPassword(window.fbAuth, email, password);
+      } catch (err) {
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          try {
+            await window.fbServices.createUserWithEmailAndPassword(window.fbAuth, email, password);
+          } catch (createErr) {
+            errBox.innerText = createErr.message;
+            errBox.classList.remove('hidden');
+          }
+        } else {
+          errBox.innerText = err.message;
+          errBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function handleLogout() {
+      if (confirm('Adakah anda pasti untuk log keluar?')) {
+        await window.fbServices.signOut(window.fbAuth);
+        location.reload();
+      }
+    }
+
+    // Navigation Switches
     function initNavigation() {
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const closeSidebarBtn = document.getElementById('close-sidebar-btn');
@@ -454,48 +569,29 @@
     }
 
     function switchView(viewName, folderId = null) {
-      // Hide all view sections
       document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
-
-      // Update Nav active styling
       document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.remove('bg-princess-pink-light', 'text-pink-600');
         el.classList.add('text-gray-600');
       });
 
       const activeNav = document.getElementById(`nav-${viewName}`);
-      if (activeNav) {
-        activeNav.classList.add('bg-princess-pink-light', 'text-pink-600');
-      }
+      if (activeNav) activeNav.classList.add('bg-princess-pink-light', 'text-pink-600');
 
-      // Route view
-      if (viewName === 'home') {
-        renderHomeView();
-        document.getElementById('view-home').classList.remove('hidden');
-      } else if (viewName === 'folders') {
-        renderFoldersView();
-        document.getElementById('view-folders').classList.remove('hidden');
-      } else if (viewName === 'folder-detail' && folderId) {
-        renderFolderDetailView(folderId);
-        document.getElementById('view-folder-detail').classList.remove('hidden');
-      } else if (viewName === 'recent') {
-        renderRecentView();
-        document.getElementById('view-recent').classList.remove('hidden');
-      } else if (viewName === 'settings') {
-        document.getElementById('view-settings').classList.remove('hidden');
-      }
+      if (viewName === 'home') { renderHomeView(); document.getElementById('view-home').classList.remove('hidden'); }
+      else if (viewName === 'folders') { renderFoldersView(); document.getElementById('view-folders').classList.remove('hidden'); }
+      else if (viewName === 'folder-detail' && folderId) { renderFolderDetailView(folderId); document.getElementById('view-folder-detail').classList.remove('hidden'); }
+      else if (viewName === 'recent') { renderRecentView(); document.getElementById('view-recent').classList.remove('hidden'); }
+      else if (viewName === 'settings') { document.getElementById('view-settings').classList.remove('hidden'); }
 
-      // Close mobile sidebar if open
       document.getElementById('sidebar').classList.add('-translate-x-full');
       document.getElementById('sidebar-overlay').classList.add('hidden');
     }
 
-    // Render Home View
+    // Dynamic Renderers
     function renderHomeView() {
-      // 1. Render Subject Folders
       const foldersGrid = document.getElementById('folders-grid');
       foldersGrid.innerHTML = '';
-
       appState.folders.forEach(folder => {
         const count = appState.worksheets.filter(w => w.folderId === folder.id).length;
         foldersGrid.innerHTML += `
@@ -507,44 +603,38 @@
               <span class="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">${count} PDF</span>
             </div>
             <div>
-              <h4 class="font-title font-bold text-gray-800 text-sm group-hover:text-pink-600 transition-colors">${folder.name}</h4>
+              <h4 class="font-title font-bold text-gray-800 text-sm group-hover:text-pink-600">${folder.name}</h4>
               <p class="text-[10px] text-gray-400">Tekan untuk buka</p>
             </div>
-          </div>
-        `;
+          </div>`;
       });
 
-      // 2. Render Continue Learning Items
       const continueContainer = document.getElementById('continue-learning-container');
       continueContainer.innerHTML = '';
-
-      if (appState.worksheets.length === 0) {
-        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja terkini. Sila import file PDF.</p>`;
+      if (!appState.worksheets.length) {
+        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja. Sila import file PDF.</p>`;
         return;
       }
 
       appState.worksheets.slice(0, 3).forEach(ws => {
         const folder = appState.folders.find(f => f.id === ws.folderId);
         continueContainer.innerHTML += `
-          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
+          <div onclick="openPDFEditor('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
             <div class="w-12 h-14 bg-princess-pink-light rounded-xl border border-princess-pink/40 flex items-center justify-center text-princess-pink shrink-0">
               <i class="fa-solid fa-file-pdf text-2xl"></i>
             </div>
             <div class="flex-1 min-w-0">
               <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
               <h5 class="font-title font-bold text-sm text-gray-800 truncate mt-1">${ws.title}</h5>
-              <p class="text-[10px] text-gray-400 mt-0.5">Muka Surat ${ws.lastPage} / ${ws.pageCount} • ${ws.lastOpened}</p>
+              <p class="text-[10px] text-gray-400 mt-0.5">Muka Surat ${ws.lastPage || 1} / ${ws.pageCount || 1}</p>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // Render Full Folders View
     function renderFoldersView() {
       const fullGrid = document.getElementById('full-folders-grid');
       fullGrid.innerHTML = '';
-
       appState.folders.forEach(folder => {
         const count = appState.worksheets.filter(w => w.folderId === folder.id).length;
         fullGrid.innerHTML += `
@@ -557,14 +647,11 @@
             </div>
             <div>
               <h4 class="font-title font-bold text-gray-800 text-base">${folder.name}</h4>
-              <p class="text-xs text-gray-400">Kemaskini Terkini</p>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // Render Folder Detail View
     function renderFolderDetailView(folderId) {
       appState.selectedFolderId = folderId;
       const folder = appState.folders.find(f => f.id === folderId);
@@ -576,168 +663,395 @@
       const grid = document.getElementById('folder-worksheets-grid');
       grid.innerHTML = '';
 
-      if (worksheets.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-12 text-center space-y-3">
-            <i class="fa-solid fa-folder-open text-4xl text-gray-300"></i>
-            <p class="text-sm font-semibold text-gray-400">Folder ini masih kosong</p>
-            <button onclick="triggerImportPDF()" class="text-xs bg-princess-pink text-white px-4 py-2 rounded-full font-bold">Import PDF Sekarang</button>
-          </div>
-        `;
+      if (!worksheets.length) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400 text-sm">Folder ini kosong. Import PDF untuk mula.</div>`;
         return;
       }
 
       worksheets.forEach(ws => {
         grid.innerHTML += `
-          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
+          <div onclick="openPDFEditor('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
             <div class="w-full h-24 bg-princess-lavender-light rounded-2xl border border-princess-lavender/50 flex items-center justify-center text-purple-400">
               <i class="fa-solid fa-file-pdf text-3xl"></i>
             </div>
             <div>
               <h5 class="font-title font-bold text-xs text-gray-800 truncate">${ws.title}</h5>
-              <p class="text-[10px] text-gray-400 mt-0.5">${ws.pageCount} Muka Surat</p>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // Render Recent View
     function renderRecentView() {
       const grid = document.getElementById('recent-worksheets-grid');
       grid.innerHTML = '';
-
       appState.worksheets.forEach(ws => {
-        const folder = appState.folders.find(f => f.id === ws.folderId);
         grid.innerHTML += `
-          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
+          <div onclick="openPDFEditor('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex flex-col justify-between h-48">
             <div class="w-full h-24 bg-princess-pink-light rounded-2xl border border-princess-pink/30 flex items-center justify-center text-pink-400">
               <i class="fa-solid fa-file-pdf text-3xl"></i>
             </div>
             <div>
-              <span class="text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
               <h5 class="font-title font-bold text-xs text-gray-800 truncate mt-1">${ws.title}</h5>
-              <p class="text-[10px] text-gray-400 mt-0.5">${ws.lastOpened}</p>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // Global Search Handling
-    function handleSearch(query) {
-      if (!query.trim()) {
-        renderHomeView();
-        return;
-      }
-      const filtered = appState.worksheets.filter(w => w.title.toLowerCase().includes(query.toLowerCase()));
-      const continueContainer = document.getElementById('continue-learning-container');
-      continueContainer.innerHTML = '';
-
-      if (filtered.length === 0) {
-        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja ditemui untuk "${query}"</p>`;
-        return;
-      }
-
-      filtered.forEach(ws => {
-        const folder = appState.folders.find(f => f.id === ws.folderId);
-        continueContainer.innerHTML += `
-          <div onclick="openWorksheetViewer('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
-            <div class="w-12 h-14 bg-princess-pink-light rounded-xl border border-princess-pink/40 flex items-center justify-center text-princess-pink shrink-0">
-              <i class="fa-solid fa-file-pdf text-2xl"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">${folder ? folder.name : 'Umum'}</span>
-              <h5 class="font-title font-bold text-sm text-gray-800 truncate mt-1">${ws.title}</h5>
-              <p class="text-[10px] text-gray-400 mt-0.5">Muka Surat ${ws.lastPage} / ${ws.pageCount}</p>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    // Modal Handling Functions
-    function openAddFolderModal() {
-      document.getElementById('modal-add-folder').classList.remove('hidden');
-    }
-
-    function closeAddFolderModal() {
-      document.getElementById('modal-add-folder').classList.add('hidden');
-      document.getElementById('new-folder-name').value = '';
-    }
-
-    function selectFolderIcon(iconClass) {
-      appState.selectedIcon = iconClass;
-      document.querySelectorAll('#icon-selector .icon-opt').forEach(btn => {
-        btn.classList.remove('border-princess-pink', 'bg-princess-pink-light', 'text-pink-600');
-        btn.classList.add('border-transparent', 'bg-gray-100', 'text-gray-500');
-      });
-      event.currentTarget.classList.remove('border-transparent', 'bg-gray-100', 'text-gray-500');
-      event.currentTarget.classList.add('border-princess-pink', 'bg-princess-pink-light', 'text-pink-600');
-    }
-
+    // Modal Folder Handling
+    function openAddFolderModal() { document.getElementById('modal-add-folder').classList.remove('hidden'); }
+    function closeAddFolderModal() { document.getElementById('modal-add-folder').classList.add('hidden'); }
     function createNewFolder() {
-      const nameInput = document.getElementById('new-folder-name').value.trim();
-      if (!nameInput) {
-        alert('Sila masukkan nama folder!');
-        return;
-      }
-
-      const newFolder = {
-        id: 'f_' + Date.now(),
-        name: nameInput,
-        icon: appState.selectedIcon,
-        color: 'bg-purple-100 text-purple-600 border-purple-200'
-      };
-
-      appState.folders.push(newFolder);
+      const name = document.getElementById('new-folder-name').value.trim();
+      if (!name) return;
+      appState.folders.push({ id: 'f_' + Date.now(), name, icon: 'fa-folder', color: 'bg-purple-100 text-purple-600 border-purple-200' });
       closeAddFolderModal();
       renderHomeView();
     }
 
-    // PDF Import Handler Setup
-    function triggerImportPDF() {
-      document.getElementById('pdf-file-input').click();
-    }
-
-    function handleFileSelected(event) {
+    // PDF Import & Firebase Storage Upload (Phase 3)
+    function triggerImportPDF() { document.getElementById('pdf-file-input').click(); }
+    async function handleFileSelected(event) {
       const files = event.target.files;
-      if (!files.length) return;
+      if (!files.length || !window.currentUser) return;
 
+      updateSyncBadge('Saving', 'Sedang Memuat Naik...');
       const targetFolderId = appState.selectedFolderId || appState.folders[0].id;
 
-      Array.from(files).forEach((file, index) => {
-        if (file.type !== 'application/pdf') {
-          alert(`Fail ${file.name} bukan berformat PDF!`);
-          return;
-        }
+      for (let file of files) {
+        if (file.type !== 'application/pdf') continue;
+        const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        const storageRef = window.fbServices.ref(window.fbStorage, `users/${window.currentUser.uid}/${fileId}.pdf`);
+
+        // Upload Blob
+        await window.fbServices.uploadBytes(storageRef, file);
+        const downloadURL = await window.fbServices.getDownloadURL(storageRef);
 
         const newWorksheet = {
-          id: 'ws_' + Date.now() + '_' + index,
+          id: fileId,
           title: file.name.replace('.pdf', ''),
           folderId: targetFolderId,
-          pageCount: 1, // Will be read dynamically by PDF.js in Phase 4
-          lastOpened: 'Baru Diumport',
-          lastPage: 1
+          pdfUrl: downloadURL,
+          pageCount: 1,
+          lastPage: 1,
+          updatedAt: Date.now()
         };
 
         appState.worksheets.unshift(newWorksheet);
-      });
+        
+        // Save metadata to Firestore
+        await window.fbServices.setDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, fileId), newWorksheet);
+      }
 
-      alert(`${files.length} lembaran kerja berjaya diimport!`);
+      updateSyncBadge('Saved', 'Telah Disimpan');
       renderHomeView();
     }
 
-    // Viewer Placeholder for Phase 1 Setup
-    function openWorksheetViewer(wsId) {
-      const ws = appState.worksheets.find(w => w.id === wsId);
-      alert(`Membuka Lembaran Kerja: "${ws.title}". Engine PDF Annotation Canvas akan diaktifkan dalam Fasa seterusnya.`);
+    // Sync Firestore Data (Phase 3 & 6)
+    async function syncDataFromCloud() {
+      if (!window.currentUser) return;
+      try {
+        updateSyncBadge('Syncing', 'Menyinkron...');
+        const q = window.fbServices.query(window.fbServices.collection(window.fbDb, `users/${window.currentUser.uid}/worksheets`));
+        const snap = await window.fbServices.getDocs(q);
+        const cloudWorksheets = [];
+        snap.forEach(docSnap => cloudWorksheets.push(docSnap.data()));
+        if (cloudWorksheets.length) appState.worksheets = cloudWorksheets;
+        updateSyncBadge('Saved', 'Telah Disimpan');
+        renderHomeView();
+      } catch (e) {
+        updateSyncBadge('Offline', 'Luar Talian');
+      }
     }
 
-    function handleLogout() {
-      if (confirm('Adakah anda pasti untuk log keluar?')) {
-        alert('Sesi telah diakhiri. Sila log masuk semula.');
+    function updateSyncBadge(status, text) {
+      document.querySelectorAll('.sync-text').forEach(el => el.innerText = text);
+    }
+
+    // PDF VIEWER & CANVAS ANNOTATION ENGINE (PHASE 4 & 5)
+    async function openPDFEditor(wsId) {
+      activePDF = appState.worksheets.find(w => w.id === wsId);
+      if (!activePDF) return;
+
+      document.getElementById('pdf-file-name').innerText = activePDF.title;
+      document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('view-pdf-editor').classList.remove('hidden');
+
+      currentPage = activePDF.lastPage || 1;
+      
+      // Load saved annotation data from Firestore
+      const annDoc = await window.fbServices.getDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/annotations`, activePDF.id));
+      pageAnnotations = annDoc.exists() ? annDoc.data().annotations || {} : {};
+
+      // Load PDF Document
+      const loadingTask = pdfjsLib.getDocument(activePDF.pdfUrl);
+      pdfDoc = await loadingTask.promise;
+      activePDF.pageCount = pdfDoc.numPages;
+
+      renderPDFPage(currentPage);
+    }
+
+    function closePDFEditor() {
+      switchView('home');
+    }
+
+    async function renderPDFPage(pageNum) {
+      if (!pdfDoc) return;
+      const page = await pdfDoc.getPage(pageNum);
+
+      const pdfCanvas = document.getElementById('pdf-canvas');
+      const annCanvas = document.getElementById('annotation-canvas');
+      const ctx = pdfCanvas.getContext('2d');
+
+      const viewport = page.getViewport({ scale: pdfScale });
+
+      pdfCanvas.width = viewport.width;
+      pdfCanvas.height = viewport.height;
+      annCanvas.width = viewport.width;
+      annCanvas.height = viewport.height;
+
+      const container = document.getElementById('pdf-container');
+      container.style.width = `${viewport.width}px`;
+      container.style.height = `${viewport.height}px`;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      document.getElementById('page-indicator').innerText = `${pageNum} / ${pdfDoc.numPages}`;
+      document.getElementById('zoom-percentage').innerText = `${Math.round(pdfScale * 100)}%`;
+
+      redrawAnnotations();
+    }
+
+    function changePDFPage(delta) {
+      if (!pdfDoc) return;
+      const newPage = currentPage + delta;
+      if (newPage >= 1 && newPage <= pdfDoc.numPages) {
+        currentPage = newPage;
+        activePDF.lastPage = currentPage;
+        renderPDFPage(currentPage);
+        triggerAutoSave();
       }
+    }
+
+    function zoomPDF(delta) {
+      pdfScale = Math.max(0.5, Math.min(3.0, pdfScale + delta));
+      renderPDFPage(currentPage);
+    }
+
+    // ANNOTATION CANVAS ENGINE (PHASE 5)
+    function setActiveTool(tool) {
+      activeTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('bg-white', 'shadow-sm', 'text-pink-600'));
+      document.getElementById(`tool-${tool}`).classList.add('bg-white', 'shadow-sm', 'text-pink-600');
+
+      if (tool === 'highlighter') {
+        toolSettings.opacity = 0.35;
+        toolSettings.size = 18;
+      } else {
+        toolSettings.opacity = 1.0;
+        toolSettings.size = parseInt(document.getElementById('tool-size').value);
+      }
+    }
+
+    function updateToolSettings() {
+      toolSettings.color = document.getElementById('tool-color').value;
+      toolSettings.size = parseInt(document.getElementById('tool-size').value);
+    }
+
+    function initCanvasEvents() {
+      const annCanvas = document.getElementById('annotation-canvas');
+
+      const getCoords = (e) => {
+        const rect = annCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) / pdfScale,
+          y: (clientY - rect.top) / pdfScale
+        };
+      };
+
+      const startDrawing = (e) => {
+        if (activeTool === 'text') {
+          const coords = getCoords(e);
+          spawnTextInput(coords.x, coords.y);
+          return;
+        }
+        isDrawing = true;
+        currentPath = [getCoords(e)];
+      };
+
+      const draw = (e) => {
+        if (!isDrawing) return;
+        const coords = getCoords(e);
+        currentPath.push(coords);
+
+        const ctx = annCanvas.getContext('2d');
+        ctx.save();
+        ctx.scale(pdfScale, pdfScale);
+        ctx.strokeStyle = toolSettings.color;
+        ctx.lineWidth = toolSettings.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalAlpha = activeTool === 'highlighter' ? 0.35 : 1.0;
+
+        if (activeTool === 'eraser') {
+          eraseStrokeAt(coords);
+        } else {
+          ctx.beginPath();
+          const p1 = currentPath[currentPath.length - 2];
+          const p2 = currentPath[currentPath.length - 1];
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      };
+
+      const stopDrawing = () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (currentPath.length > 1 && activeTool !== 'eraser') {
+          if (!pageAnnotations[currentPage]) pageAnnotations[currentPage] = [];
+          
+          const strokeData = {
+            type: activeTool,
+            color: toolSettings.color,
+            size: toolSettings.size,
+            opacity: toolSettings.opacity,
+            points: currentPath
+          };
+
+          pageAnnotations[currentPage].push(strokeData);
+          undoStack.push({ page: currentPage, stroke: strokeData });
+          redoStack = [];
+          triggerAutoSave();
+        }
+      };
+
+      annCanvas.addEventListener('mousedown', startDrawing);
+      annCanvas.addEventListener('mousemove', draw);
+      annCanvas.addEventListener('mouseup', stopDrawing);
+
+      annCanvas.addEventListener('touchstart', startDrawing);
+      annCanvas.addEventListener('touchmove', draw);
+      annCanvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function redrawAnnotations() {
+      const annCanvas = document.getElementById('annotation-canvas');
+      const ctx = annCanvas.getContext('2d');
+      ctx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+
+      const strokes = pageAnnotations[currentPage] || [];
+      strokes.forEach(stroke => {
+        if (stroke.type === 'text') return; // Handled separately
+        ctx.save();
+        ctx.scale(pdfScale, pdfScale);
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalAlpha = stroke.opacity || 1.0;
+
+        ctx.beginPath();
+        stroke.points.forEach((pt, i) => {
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function eraseStrokeAt(coords) {
+      const strokes = pageAnnotations[currentPage] || [];
+      const threshold = toolSettings.size * 2;
+
+      pageAnnotations[currentPage] = strokes.filter(stroke => {
+        return !stroke.points.some(pt => {
+          const dist = Math.hypot(pt.x - coords.x, pt.y - coords.y);
+          return dist < threshold;
+        });
+      });
+
+      redrawAnnotations();
+      triggerAutoSave();
+    }
+
+    function spawnTextInput(x, y) {
+      const container = document.getElementById('text-annotations-layer');
+      const input = document.createElement('input');
+      input.className = 'text-annotation-input';
+      input.style.left = `${x * pdfScale}px`;
+      input.style.top = `${y * pdfScale}px`;
+      input.style.color = toolSettings.color;
+
+      input.onblur = () => {
+        if (input.value.trim()) {
+          if (!pageAnnotations[currentPage]) pageAnnotations[currentPage] = [];
+          pageAnnotations[currentPage].push({
+            type: 'text',
+            text: input.value,
+            x, y,
+            color: toolSettings.color
+          });
+          triggerAutoSave();
+        }
+        input.remove();
+        redrawAnnotations();
+      };
+
+      container.appendChild(input);
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function undoAnnotation() {
+      if (!undoStack.length) return;
+      const action = undoStack.pop();
+      redoStack.push(action);
+      if (pageAnnotations[action.page]) {
+        pageAnnotations[action.page].pop();
+        redrawAnnotations();
+        triggerAutoSave();
+      }
+    }
+
+    function redoAnnotation() {
+      if (!redoStack.length) return;
+      const action = redoStack.pop();
+      undoStack.push(action);
+      if (!pageAnnotations[action.page]) pageAnnotations[action.page] = [];
+      pageAnnotations[action.page].push(action.stroke);
+      redrawAnnotations();
+      triggerAutoSave();
+    }
+
+    // DEBOUNCED AUTO-SAVE ENGINE (PHASE 6)
+    function triggerAutoSave() {
+      updateSyncBadge('Saving', 'Sedang Menyimpan...');
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(async () => {
+        if (!window.currentUser || !activePDF) return;
+        
+        try {
+          // Save Annotations
+          await window.fbServices.setDoc(
+            window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/annotations`, activePDF.id),
+            { annotations: pageAnnotations, updatedAt: Date.now() }
+          );
+
+          // Update Worksheet Metadata
+          await window.fbServices.setDoc(
+            window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, activePDF.id),
+            { lastPage: currentPage, updatedAt: Date.now() },
+            { merge: true }
+          );
+
+          updateSyncBadge('Saved', 'Telah Disimpan');
+        } catch (err) {
+          updateSyncBadge('Failed', 'Gagal Disimpan');
+        }
+      }, 1200);
     }
   </script>
 </body>
