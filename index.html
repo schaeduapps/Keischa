@@ -126,7 +126,7 @@
 </head>
 <body class="sparkle-bg min-h-screen flex flex-col md:flex-row overflow-x-hidden">
 
-  <!-- AUTH MODAL / SCREEN (PHASE 2) -->
+  <!-- AUTH MODAL / SCREEN -->
   <div id="auth-overlay" class="fixed inset-0 z-50 bg-princess-cream flex items-center justify-center p-4 sparkle-bg">
     <div class="bg-white/90 backdrop-blur-md p-8 rounded-3xl border-2 border-princess-pink shadow-2xl w-full max-w-md space-y-6">
       <div class="text-center space-y-2">
@@ -316,7 +316,7 @@
               <p id="current-folder-subtitle" class="text-xs text-gray-500">0 Lembaran Kerja</p>
             </div>
           </div>
-          <button onclick="triggerImportPDF()" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400">
+          <button onclick="triggerImportPDF(appState.selectedFolderId)" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400">
             <i class="fa-solid fa-plus mr-1"></i> Tambah PDF
           </button>
         </div>
@@ -352,7 +352,7 @@
         </div>
       </section>
 
-      <!-- VIEW 6: PDF VIEWER & CANVAS ANNOTATION EDITOR (PHASE 4 & 5) -->
+      <!-- VIEW 6: PDF VIEWER & CANVAS ANNOTATION EDITOR -->
       <section id="view-pdf-editor" class="view-content hidden flex-1 flex flex-col space-y-4 h-full">
         <!-- Top Toolbar -->
         <div class="bg-white rounded-2xl p-3 border border-princess-lavender shadow-md flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
@@ -437,7 +437,7 @@
 
   <input type="file" id="pdf-file-input" accept="application/pdf" multiple class="hidden" onchange="handleFileSelected(event)" />
 
-  <!-- FIREBASE MODULE INTEGRATION (PHASE 2 & 3 & 6) -->
+  <!-- FIREBASE MODULE INTEGRATION -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -483,7 +483,7 @@
   <!-- MAIN APP ENGINE -->
   <script>
     let appState = {
-      selectedFolderId: null,
+      selectedFolderId: 'bm',
       selectedIcon: 'fa-book',
       folders: [
         { id: 'bm', name: 'Bahasa Melayu', icon: 'fa-book', color: 'bg-pink-100 text-pink-600 border-pink-200' },
@@ -505,7 +505,6 @@
     let activeTool = 'pen';
     let toolSettings = { color: '#4A3E3D', size: 5, opacity: 1.0 };
     
-    // Annotation Structures per Page: { [pageNumber]: [ strokes / textObjects ] }
     let pageAnnotations = {};
     let undoStack = [];
     let redoStack = [];
@@ -519,7 +518,7 @@
       renderHomeView();
     });
 
-    // Auth Form Logic (Phase 2)
+    // Auth Form Logic
     async function handleAuthSubmit(e) {
       e.preventDefault();
       const email = document.getElementById('auth-email').value;
@@ -563,9 +562,9 @@
         overlay.classList.toggle('hidden');
       }
 
-      mobileMenuBtn.addEventListener('click', toggleSidebar);
-      closeSidebarBtn.addEventListener('click', toggleSidebar);
-      overlay.addEventListener('click', toggleSidebar);
+      if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+      if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
+      if (overlay) overlay.addEventListener('click', toggleSidebar);
     }
 
     function switchView(viewName, folderId = null) {
@@ -705,48 +704,72 @@
       if (!name) return;
       appState.folders.push({ id: 'f_' + Date.now(), name, icon: 'fa-folder', color: 'bg-purple-100 text-purple-600 border-purple-200' });
       closeAddFolderModal();
+      document.getElementById('new-folder-name').value = '';
       renderHomeView();
     }
 
-    // PDF Import & Firebase Storage Upload (Phase 3)
-    function triggerImportPDF() { document.getElementById('pdf-file-input').click(); }
+    // PDF Import Fix
+    function triggerImportPDF(folderId = null) { 
+      if (folderId) appState.selectedFolderId = folderId;
+      const fileInput = document.getElementById('pdf-file-input');
+      fileInput.value = ''; // Clear value to allow re-uploading same file
+      fileInput.click(); 
+    }
+
     async function handleFileSelected(event) {
       const files = event.target.files;
-      if (!files.length || !window.currentUser) return;
+      if (!files || !files.length) return;
 
-      updateSyncBadge('Saving', 'Sedang Memuat Naik...');
-      const targetFolderId = appState.selectedFolderId || appState.folders[0].id;
-
-      for (let file of files) {
-        if (file.type !== 'application/pdf') continue;
-        const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-        const storageRef = window.fbServices.ref(window.fbStorage, `users/${window.currentUser.uid}/${fileId}.pdf`);
-
-        // Upload Blob
-        await window.fbServices.uploadBytes(storageRef, file);
-        const downloadURL = await window.fbServices.getDownloadURL(storageRef);
-
-        const newWorksheet = {
-          id: fileId,
-          title: file.name.replace('.pdf', ''),
-          folderId: targetFolderId,
-          pdfUrl: downloadURL,
-          pageCount: 1,
-          lastPage: 1,
-          updatedAt: Date.now()
-        };
-
-        appState.worksheets.unshift(newWorksheet);
-        
-        // Save metadata to Firestore
-        await window.fbServices.setDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, fileId), newWorksheet);
+      if (!window.currentUser) {
+        alert("Sila log masuk dahulu untuk memuat naik fail.");
+        return;
       }
 
-      updateSyncBadge('Saved', 'Telah Disimpan');
-      renderHomeView();
+      updateSyncBadge('Saving', 'Sedang Memuat Naik...');
+      const targetFolderId = appState.selectedFolderId || (appState.folders[0] ? appState.folders[0].id : 'bm');
+
+      try {
+        for (let file of files) {
+          if (file.type !== 'application/pdf') continue;
+          const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+          const storageRef = window.fbServices.ref(window.fbStorage, `users/${window.currentUser.uid}/${fileId}.pdf`);
+
+          // Upload Blob to Firebase Storage
+          await window.fbServices.uploadBytes(storageRef, file);
+          const downloadURL = await window.fbServices.getDownloadURL(storageRef);
+
+          const newWorksheet = {
+            id: fileId,
+            title: file.name.replace('.pdf', ''),
+            folderId: targetFolderId,
+            pdfUrl: downloadURL,
+            pageCount: 1,
+            lastPage: 1,
+            updatedAt: Date.now()
+          };
+
+          appState.worksheets.unshift(newWorksheet);
+          
+          // Save metadata to Firestore
+          await window.fbServices.setDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, fileId), newWorksheet);
+        }
+
+        updateSyncBadge('Saved', 'Telah Disimpan');
+      } catch (error) {
+        console.error("Gagal muat naik:", error);
+        alert("Gagal memuat naik PDF. Sila cuba lagi.");
+        updateSyncBadge('Offline', 'Ralat Muat Naik');
+      }
+
+      // Refresh view
+      if (!document.getElementById('view-folder-detail').classList.contains('hidden')) {
+        renderFolderDetailView(targetFolderId);
+      } else {
+        renderHomeView();
+      }
     }
 
-    // Sync Firestore Data (Phase 3 & 6)
+    // Sync Firestore Data
     async function syncDataFromCloud() {
       if (!window.currentUser) return;
       try {
@@ -767,7 +790,7 @@
       document.querySelectorAll('.sync-text').forEach(el => el.innerText = text);
     }
 
-    // PDF VIEWER & CANVAS ANNOTATION ENGINE (PHASE 4 & 5)
+    // PDF VIEWER & CANVAS ANNOTATION ENGINE
     async function openPDFEditor(wsId) {
       activePDF = appState.worksheets.find(w => w.id === wsId);
       if (!activePDF) return;
@@ -778,16 +801,18 @@
 
       currentPage = activePDF.lastPage || 1;
       
-      // Load saved annotation data from Firestore
-      const annDoc = await window.fbServices.getDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/annotations`, activePDF.id));
-      pageAnnotations = annDoc.exists() ? annDoc.data().annotations || {} : {};
+      try {
+        const annDoc = await window.fbServices.getDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/annotations`, activePDF.id));
+        pageAnnotations = annDoc.exists() ? annDoc.data().annotations || {} : {};
 
-      // Load PDF Document
-      const loadingTask = pdfjsLib.getDocument(activePDF.pdfUrl);
-      pdfDoc = await loadingTask.promise;
-      activePDF.pageCount = pdfDoc.numPages;
+        const loadingTask = pdfjsLib.getDocument(activePDF.pdfUrl);
+        pdfDoc = await loadingTask.promise;
+        activePDF.pageCount = pdfDoc.numPages;
 
-      renderPDFPage(currentPage);
+        renderPDFPage(currentPage);
+      } catch(err) {
+        console.error("Gagal membuka PDF:", err);
+      }
     }
 
     function closePDFEditor() {
@@ -837,7 +862,6 @@
       renderPDFPage(currentPage);
     }
 
-    // ANNOTATION CANVAS ENGINE (PHASE 5)
     function setActiveTool(tool) {
       activeTool = tool;
       document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('bg-white', 'shadow-sm', 'text-pink-600'));
@@ -944,7 +968,7 @@
 
       const strokes = pageAnnotations[currentPage] || [];
       strokes.forEach(stroke => {
-        if (stroke.type === 'text') return; // Handled separately
+        if (stroke.type === 'text') return;
         ctx.save();
         ctx.scale(pdfScale, pdfScale);
         ctx.strokeStyle = stroke.color;
@@ -1026,7 +1050,6 @@
       triggerAutoSave();
     }
 
-    // DEBOUNCED AUTO-SAVE ENGINE (PHASE 6)
     function triggerAutoSave() {
       updateSyncBadge('Saving', 'Sedang Menyimpan...');
       clearTimeout(saveDebounceTimer);
@@ -1034,13 +1057,11 @@
         if (!window.currentUser || !activePDF) return;
         
         try {
-          // Save Annotations
           await window.fbServices.setDoc(
             window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/annotations`, activePDF.id),
             { annotations: pageAnnotations, updatedAt: Date.now() }
           );
 
-          // Update Worksheet Metadata
           await window.fbServices.setDoc(
             window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, activePDF.id),
             { lastPage: currentPage, updatedAt: Date.now() },
@@ -1052,6 +1073,29 @@
           updateSyncBadge('Failed', 'Gagal Disimpan');
         }
       }, 1200);
+    }
+
+    function handleSearch(val) {
+      // Pembantu carian mudah
+      const query = val.toLowerCase().trim();
+      if (!query) {
+        renderHomeView();
+        return;
+      }
+      const filtered = appState.worksheets.filter(w => w.title.toLowerCase().includes(query));
+      const container = document.getElementById('continue-learning-container');
+      container.innerHTML = '';
+      filtered.forEach(ws => {
+        container.innerHTML += `
+          <div onclick="openPDFEditor('${ws.id}')" class="worksheet-card bg-white p-4 rounded-3xl border border-princess-lavender cursor-pointer flex items-center space-x-4 shadow-sm">
+            <div class="w-12 h-14 bg-princess-pink-light rounded-xl border border-princess-pink/40 flex items-center justify-center text-princess-pink shrink-0">
+              <i class="fa-solid fa-file-pdf text-2xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h5 class="font-title font-bold text-sm text-gray-800 truncate mt-1">${ws.title}</h5>
+            </div>
+          </div>`;
+      });
     }
   </script>
 </body>
