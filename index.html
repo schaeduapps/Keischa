@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Keischa - My Princess Worksheet</title>
+  <title>KEISCHA PORTAL</title>
 
   <!-- Google Fonts: Fredoka & Quicksand -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,14 +133,14 @@
         <div class="w-16 h-16 rounded-full bg-princess-pink-light border-2 border-princess-gold flex items-center justify-center mx-auto shadow-md">
           <i class="fa-solid fa-crown text-princess-gold text-2xl"></i>
         </div>
-        <h2 class="font-title text-2xl font-bold text-princess-text">My Princess Worksheet</h2>
+        <h2 class="font-title text-2xl font-bold text-princess-text">KEISCHA PORTAL</h2>
         <p class="text-xs text-gray-500">Log masuk untuk menyinkronkan lembaran kerja anda.</p>
       </div>
 
       <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-gray-600 uppercase mb-1">E-mel</label>
-          <input type="email" id="auth-email" required placeholder="puteri@keischa.app" class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink" />
+          <input type="email" id="auth-email" required placeholder="pengguna@keischa.app" class="w-full px-4 py-3 bg-princess-lavender-light/50 border border-princess-lavender rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-princess-pink" />
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Kata Laluan</label>
@@ -160,7 +160,7 @@
   <header class="md:hidden bg-white/90 backdrop-blur-md px-4 py-3 tiara-border flex items-center justify-between sticky top-0 z-30">
     <div class="flex items-center space-x-2">
       <i class="fa-solid fa-crown text-princess-gold text-xl"></i>
-      <span class="font-title text-xl font-bold text-princess-text">Keischa</span>
+      <span class="font-title text-xl font-bold text-princess-text">KEISCHA PORTAL</span>
     </div>
     <div class="flex items-center space-x-3">
       <span id="sync-status-mobile" class="text-xs px-2.5 py-1 rounded-full bg-princess-lavender-light text-purple-700 font-semibold flex items-center gap-1.5">
@@ -182,8 +182,8 @@
             <i class="fa-solid fa-crown text-princess-gold text-lg"></i>
           </div>
           <div>
-            <h1 class="font-title text-xl font-bold text-princess-text tracking-wide">Keischa</h1>
-            <p class="text-[10px] text-pink-500 font-semibold uppercase tracking-wider">My Princess Worksheet</p>
+            <h1 class="font-title text-lg font-bold text-princess-text tracking-wide">KEISCHA PORTAL</h1>
+            <p class="text-[10px] text-pink-500 font-semibold uppercase tracking-wider">Sistem Lembaran Kerja</p>
           </div>
         </div>
         <button id="close-sidebar-btn" class="md:hidden text-gray-400 hover:text-gray-600">
@@ -217,7 +217,7 @@
           <i class="fa-solid fa-user-large text-sm"></i>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold text-gray-800 truncate" id="user-display-name">Tetamu</p>
+          <p class="text-xs font-bold text-gray-800 truncate" id="user-display-name">Pengguna</p>
           <p class="text-[10px] text-gray-500 truncate" id="user-display-email">Log masuk disemak...</p>
         </div>
         <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg" title="Log Keluar">
@@ -259,7 +259,7 @@
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-princess-pink-light via-princess-lavender-light to-princess-blue p-6 sm:p-8 border-2 border-white shadow-lg">
           <div class="relative z-10 space-y-2 max-w-xl">
             <span class="px-3 py-1 bg-white/80 text-pink-600 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm">Selamat Datang ✨</span>
-            <h2 class="font-title text-2xl sm:text-3xl font-bold text-princess-text">Mari Belajar Hari Ini, Puteri! 👑</h2>
+            <h2 class="font-title text-2xl sm:text-3xl font-bold text-princess-text">Selamat Datang ke KEISCHA PORTAL! ✨</h2>
             <p class="text-sm text-gray-600 leading-relaxed">Pilih folder subjek di bawah atau sambung terus lembaran kerja yang telah anda mulakan.</p>
           </div>
           <i class="fa-solid fa-wand-magic-sparkles absolute right-4 bottom-2 text-7xl text-pink-300/30 -rotate-12 pointer-events-none"></i>
@@ -316,7 +316,7 @@
               <p id="current-folder-subtitle" class="text-xs text-gray-500">0 Lembaran Kerja</p>
             </div>
           </div>
-          <button onclick="triggerImportPDF(appState.selectedFolderId)" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400">
+          <button onclick="triggerImportPDF(appState.selectedFolderId)" class="bg-princess-pink text-white font-title px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-400 shadow-md">
             <i class="fa-solid fa-plus mr-1"></i> Tambah PDF
           </button>
         </div>
@@ -611,7 +611,7 @@
       const continueContainer = document.getElementById('continue-learning-container');
       continueContainer.innerHTML = '';
       if (!appState.worksheets.length) {
-        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja. Sila import file PDF.</p>`;
+        continueContainer.innerHTML = `<p class="text-xs text-gray-400 col-span-full">Tiada lembaran kerja. Sila import fail PDF.</p>`;
         return;
       }
 
@@ -708,11 +708,11 @@
       renderHomeView();
     }
 
-    // PDF Import Fix
+    // High-Speed Optimised PDF Upload
     function triggerImportPDF(folderId = null) { 
       if (folderId) appState.selectedFolderId = folderId;
       const fileInput = document.getElementById('pdf-file-input');
-      fileInput.value = ''; // Clear value to allow re-uploading same file
+      fileInput.value = ''; // Reset input to allow re-uploading duplicate file names
       fileInput.click(); 
     }
 
@@ -729,12 +729,12 @@
       const targetFolderId = appState.selectedFolderId || (appState.folders[0] ? appState.folders[0].id : 'bm');
 
       try {
-        for (let file of files) {
-          if (file.type !== 'application/pdf') continue;
+        const uploadPromises = Array.from(files).map(async (file) => {
+          if (file.type !== 'application/pdf') return;
           const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
           const storageRef = window.fbServices.ref(window.fbStorage, `users/${window.currentUser.uid}/${fileId}.pdf`);
 
-          // Upload Blob to Firebase Storage
+          // Upload File Stream Direct
           await window.fbServices.uploadBytes(storageRef, file);
           const downloadURL = await window.fbServices.getDownloadURL(storageRef);
 
@@ -750,9 +750,11 @@
 
           appState.worksheets.unshift(newWorksheet);
           
-          // Save metadata to Firestore
-          await window.fbServices.setDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, fileId), newWorksheet);
-        }
+          // Fast Save metadata to Firestore
+          return window.fbServices.setDoc(window.fbServices.doc(window.fbDb, `users/${window.currentUser.uid}/worksheets`, fileId), newWorksheet);
+        });
+
+        await Promise.all(uploadPromises);
 
         updateSyncBadge('Saved', 'Telah Disimpan');
       } catch (error) {
@@ -761,7 +763,7 @@
         updateSyncBadge('Offline', 'Ralat Muat Naik');
       }
 
-      // Refresh view
+      // Fast UI Update
       if (!document.getElementById('view-folder-detail').classList.contains('hidden')) {
         renderFolderDetailView(targetFolderId);
       } else {
@@ -1076,7 +1078,6 @@
     }
 
     function handleSearch(val) {
-      // Pembantu carian mudah
       const query = val.toLowerCase().trim();
       if (!query) {
         renderHomeView();
